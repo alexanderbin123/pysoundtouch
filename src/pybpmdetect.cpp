@@ -16,31 +16,74 @@ extern "C" {
 #define PyObject_DEL(op) PyMem_DEL((op))
 #endif
 
+/*
 PyTypeObject py_bpmdetect_t = {
     PyObject_HEAD_INIT(&PyType_Type)
     0,
     "BPMDetect",
     sizeof(py_bpmdetect),
     0,
-    /* standard methods */
+    // standard methods
     (destructor) py_bpmdetect_dealloc,
     (printfunc) 0,
     (getattrfunc) py_bpmdetect_getattr,
     (setattrfunc) 0,
     (cmpfunc) 0,
     (reprfunc) 0,
-    /* type categories */
-    0, /* as number */
-    0, /* as sequence */
-    0, /* as mapping */
-    0, /* hash */
-    0, /* binary */
-    0, /* repr */
-    0, /* getattro */
-    0, /* setattro */
-    0, /* as buffer */
-    0, /* tp_flags */
+    // type categories
+    0, // as number
+    0, // as sequence
+    0, // as mapping
+    0, // hash
+    0, // binary
+    0, // repr
+    0, // getattro
+    0, // setattro
+    0, // as buffer
+    0, // tp_flags
     NULL
+};
+*/
+
+PyTypeObject py_bpmdetect_t = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "BPMDetect",                   /* tp_name */
+    sizeof(py_bpmdetect),          /* tp_basicsize */
+    0,                              /* tp_itemsize */
+    (destructor) py_bpmdetect_dealloc,      /* tp_dealloc */
+    0,                              /* tp_vectorcall_offset */
+    (getattrfunc) py_bpmdetect_getattr,     /* tp_getattr */
+    0,                              /* tp_setattr */
+    0,                              /* tp_as_async */
+    0,                              /* tp_repr */
+    0,                              /* tp_as_number */
+    0,                              /* tp_as_sequence */
+    0,                              /* tp_as_mapping */
+    0,                              /* tp_hash */
+    0,                              /* tp_call */
+    0,                              /* tp_str */
+    0,                              /* tp_getattro */
+    0,                              /* tp_setattro */
+    0,                              /* tp_as_buffer */
+    0,                              /* tp_flags */
+    0,                              /* tp_doc */
+    0,                              /* tp_traverse */
+    0,                              /* tp_clear */
+    0,                              /* tp_richcompare */
+    0,                              /* tp_weaklistoffset */
+    0,                              /* tp_iter */
+    0,                              /* tp_iternext */
+    0,                              /* tp_methods */
+    0,                              /* tp_members */
+    0,                              /* tp_getset */
+    0,                              /* tp_base */
+    0,                              /* tp_dict */
+    0,                              /* tp_descr_get */
+    0,                              /* tp_descr_set */
+    0,                              /* tp_dictoffset */
+    0,                              /* tp_init */
+    0,                              /* tp_alloc */
+    0,                              /* tp_new */
 };
 
 // Constructor
@@ -118,5 +161,6 @@ static PyMethodDef bpmdetect_methods[] = {
 
 // Extract information from the bpmdetect object
 static PyObject* py_bpmdetect_getattr(PyObject* self, char* name) {
-  return Py_FindMethod(bpmdetect_methods, self, name);
+  //return Py_FindMethod(bpmdetect_methods, self, name);
+  return PyObject_GenericGetAttr((PyObject *)self, PyUnicode_FromString(name));
 }

@@ -7,7 +7,7 @@
 #define __PY_BMPDETECT_H__
 
 #include <Python.h>
-#include <BPMDetect.h>
+#include <soundtouch/BPMDetect.h>
 
 #define BUFFER_SIZE 44100
 

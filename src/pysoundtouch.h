@@ -6,10 +6,9 @@
 #ifndef __PY_SOUNDTOUCH_H__
 #define __PY_SOUNDTOUCH_H__
 
-#define __cplusplus
-
 #include <Python.h>
-#include <SoundTouch.h>
+#include <soundtouch/SoundTouch.h>
+#include <vector>
 
 #define BUFFER_SIZE 44100
 

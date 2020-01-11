@@ -3,7 +3,7 @@
  * Expose BMP detection and Shifting to python
  */
 
-#include <SoundTouch.h>
+#include <soundtouch/SoundTouch.h>
 #include "soundtouchmodule.h"
 
 static PyMethodDef soundtouch_methods[] = {
@@ -12,16 +12,27 @@ static PyMethodDef soundtouch_methods[] = {
     { NULL, 0, 0, NULL }
 };
 
-PyMODINIT_FUNC
-initsoundtouch(void) {
-    PyObject *module, *dict;
+static struct PyModuleDef moduledef = {
+  PyModuleDef_HEAD_INIT,
+  "soundtouch",
+  0,              /* m_doc */
+  -1,             /* m_size */
+  soundtouch_methods,   /* m_methods */
+  NULL,           /* m_reload */
+  NULL,           /* m_traverse */
+  NULL,           /* m_clear */
+  NULL            /* m_free */
+};
 
-    module = Py_InitModule("soundtouch", soundtouch_methods);
-    dict = PyModule_GetDict(module);
+PyObject *PyInit_soundtouchmodule(void) {
+    PyObject *module = PyModule_Create( &moduledef );
+    //PyObject *dict = PyModule_GetDict(module);
 
-    PyDict_SetItemString(dict, "__version__",
-			 PyString_FromString(VERSION));
+    PyModule_AddObject(module, "__version__",
+			 PyUnicode_FromString(VERSION));
 
     if (PyErr_Occurred())
       PyErr_SetString(PyExc_ImportError, "soundtouch: init failed");
+
+    return module;
 }

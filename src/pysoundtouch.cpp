@@ -21,31 +21,56 @@ extern "C" {
 WavOutFile* inputs = new WavOutFile("/Users/jrising/inputs.wav", 44100, 16, 1);
 WavOutFile* outputs = new WavOutFile("/Users/jrising/outputs.wav", 44100, 16, 1);*/
 
+/*
 PyTypeObject py_soundtouch_t = {
     PyObject_HEAD_INIT(&PyType_Type)
-    0,
-    "Soundtouch",
-    sizeof(py_soundtouch),
-    0,
-    /* standard methods */
-    (destructor) py_soundtouch_dealloc,
-    (printfunc) 0,
-    (getattrfunc) py_soundtouch_getattr,
-    (setattrfunc) 0,
-    (cmpfunc) 0,
-    (reprfunc) 0,
-    /* type categories */
-    0, /* as number */
-    0, /* as sequence */
-    0, /* as mapping */
-    0, /* hash */
-    0, /* binary */
-    0, /* repr */
-    0, /* getattro */
-    0, /* setattro */
-    0, /* as buffer */
-    0, /* tp_flags */
-    NULL
+    .tp_name = "Soundtouch",
+    .tp_basicsize = sizeof(py_soundtouch),
+    // standard methods
+    .tp_dealloc = (destructor) py_soundtouch_dealloc,
+    .tp_getattr  = (getattrfunc) py_soundtouch_getattr
+};
+*/
+
+PyTypeObject py_soundtouch_t = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "Soundtouch",                   /* tp_name */
+    sizeof(py_soundtouch),          /* tp_basicsize */
+    0,                              /* tp_itemsize */
+    (destructor) py_soundtouch_dealloc,      /* tp_dealloc */
+    0,                              /* tp_vectorcall_offset */
+    (getattrfunc) py_soundtouch_getattr,     /* tp_getattr */
+    0,                              /* tp_setattr */
+    0,                              /* tp_as_async */
+    0,                              /* tp_repr */
+    0,                              /* tp_as_number */
+    0,                              /* tp_as_sequence */
+    0,                              /* tp_as_mapping */
+    0,                              /* tp_hash */
+    0,                              /* tp_call */
+    0,                              /* tp_str */
+    0,                              /* tp_getattro */
+    0,                              /* tp_setattro */
+    0,                              /* tp_as_buffer */
+    0,                              /* tp_flags */
+    0,                              /* tp_doc */
+    0,                              /* tp_traverse */
+    0,                              /* tp_clear */
+    0,                              /* tp_richcompare */
+    0,                              /* tp_weaklistoffset */
+    0,                              /* tp_iter */
+    0,                              /* tp_iternext */
+    0,                              /* tp_methods */
+    0,                              /* tp_members */
+    0,                              /* tp_getset */
+    0,                              /* tp_base */
+    0,                              /* tp_dict */
+    0,                              /* tp_descr_get */
+    0,                              /* tp_descr_set */
+    0,                              /* tp_dictoffset */
+    0,                              /* tp_init */
+    0,                              /* tp_alloc */
+    0,                              /* tp_new */
 };
 
 // Constructor
@@ -207,17 +232,17 @@ static PyObject* py_soundtouch_get_samples(PyObject* self, PyObject* args) {
   // For debugging:
   //outputs->write(ps->buffer.shorts, received * ps->channels);
 
-  return PyString_FromStringAndSize(ps->buffer.chars, received * 2 * ps->channels);
+  return PyUnicode_FromStringAndSize(ps->buffer.chars, received * 2 * ps->channels);
 }
 
 // Return how many samples are available for output
 static PyObject* py_soundtouch_ready_count(PyObject* self, PyObject* args) {
-  return PyInt_FromLong(PY_SOUNDTOUCH(self)->soundtouch->numSamples());
+  return PyLong_FromLong(PY_SOUNDTOUCH(self)->soundtouch->numSamples());
 }
 
 // Return how many samples will be available given the current data
 static PyObject* py_soundtouch_waiting_count(PyObject* self, PyObject* args) {
-  return PyInt_FromLong(PY_SOUNDTOUCH(self)->soundtouch->numUnprocessedSamples());
+  return PyLong_FromLong(PY_SOUNDTOUCH(self)->soundtouch->numUnprocessedSamples());
 }
 
 /* housekeeping */
@@ -239,5 +264,6 @@ static PyMethodDef soundtouch_methods[] = {
 // Get additional attributes from the SoundTouch object
 static PyObject* py_soundtouch_getattr(PyObject* self, char* name) {
   // TODO: add soundtouch.getSetting here?  Add a setattr with soundtouch.setSetting?
-  return Py_FindMethod(soundtouch_methods, self, name);
+  //return Py_FindMethod(soundtouch_methods, self, name);
+  return PyObject_GenericGetAttr((PyObject *)self, PyUnicode_FromString(name));
 }
