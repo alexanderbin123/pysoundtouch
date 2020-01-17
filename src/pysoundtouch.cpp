@@ -6,6 +6,7 @@
  */
 
 #include <Python.h>
+#include <vector>
 
 extern "C" {
   #include "soundtouchmodule.h"
@@ -32,47 +33,6 @@ PyTypeObject py_soundtouch_t = {
 };
 */
 
-PyTypeObject py_soundtouch_t = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "Soundtouch",                   /* tp_name */
-    sizeof(py_soundtouch),          /* tp_basicsize */
-    0,                              /* tp_itemsize */
-    (destructor) py_soundtouch_dealloc,      /* tp_dealloc */
-    0,                              /* tp_vectorcall_offset */
-    (getattrfunc) py_soundtouch_getattr,     /* tp_getattr */
-    0,                              /* tp_setattr */
-    0,                              /* tp_as_async */
-    0,                              /* tp_repr */
-    0,                              /* tp_as_number */
-    0,                              /* tp_as_sequence */
-    0,                              /* tp_as_mapping */
-    0,                              /* tp_hash */
-    0,                              /* tp_call */
-    0,                              /* tp_str */
-    0,                              /* tp_getattro */
-    0,                              /* tp_setattro */
-    0,                              /* tp_as_buffer */
-    0,                              /* tp_flags */
-    0,                              /* tp_doc */
-    0,                              /* tp_traverse */
-    0,                              /* tp_clear */
-    0,                              /* tp_richcompare */
-    0,                              /* tp_weaklistoffset */
-    0,                              /* tp_iter */
-    0,                              /* tp_iternext */
-    0,                              /* tp_methods */
-    0,                              /* tp_members */
-    0,                              /* tp_getset */
-    0,                              /* tp_base */
-    0,                              /* tp_dict */
-    0,                              /* tp_descr_get */
-    0,                              /* tp_descr_set */
-    0,                              /* tp_dictoffset */
-    0,                              /* tp_init */
-    0,                              /* tp_alloc */
-    0,                              /* tp_new */
-};
-
 // Constructor
 PyObject* py_soundtouch_new(PyObject* self, PyObject* args) {
   py_soundtouch* ps = NULL;
@@ -85,7 +45,8 @@ PyObject* py_soundtouch_new(PyObject* self, PyObject* args) {
   }
 
   // Create the object
-  ps = PyObject_NEW(py_soundtouch, &py_soundtouch_t);
+  ps = PY_SOUNDTOUCH(self);
+  //ps = PyObject_NEW(py_soundtouch, &py_soundtouch_t);
   ps->soundtouch = new soundtouch::SoundTouch();
   ps->channels = (int) channels;
   ps->soundtouch->setSampleRate(sampleRate);
@@ -193,20 +154,23 @@ static PyObject* py_soundtouch_clear(PyObject* self, PyObject* args) {
 static PyObject* py_soundtouch_put_samples(PyObject* self, PyObject* args) {
   py_soundtouch* ps = PY_SOUNDTOUCH(self);
   int buflen;
-  char* transfer;
+  const char* transfer;
 
   // Given a string of samples to add
-  if (!PyArg_ParseTuple(args, "s#", &transfer, &buflen)) {
+  if (!PyArg_ParseTuple(args, "y#", &transfer, &buflen)) {
     PyErr_SetString(PyExc_TypeError, "invalid argument");
-	return NULL;
+    return NULL;
   }
 
   // Move them into our char-short union
+  /*
   for (int ii = 0; ii < buflen; ii++)
     ps->buffer.chars[ii] = transfer[ii];
+  */
 
   // Add them
-  ps->soundtouch->putSamples(ps->buffer.shorts, (uint) buflen / (2 * ps->channels));
+  //ps->soundtouch->putSamples(ps->buffer.shorts, (uint) buflen / (2 * ps->channels));
+  ps->soundtouch->putSamples((const soundtouch::SAMPLETYPE*)transfer, (uint) buflen / (2 * ps->channels));
 
   // For debugging:
   //inputs->write(ps->buffer.shorts, buflen / 2);
@@ -226,13 +190,14 @@ static PyObject* py_soundtouch_get_samples(PyObject* self, PyObject* args) {
 	return NULL;
   }
   
+  std::vector<char> buf( maxSamples * sizeof( soundtouch::SAMPLETYPE ) * ps->channels );
   // Move them into our char-short union
-  uint received = ps->soundtouch->receiveSamples(ps->buffer.shorts, maxSamples);
+  uint received = ps->soundtouch->receiveSamples((soundtouch::SAMPLETYPE*)buf.data(), maxSamples);
 
   // For debugging:
   //outputs->write(ps->buffer.shorts, received * ps->channels);
 
-  return PyUnicode_FromStringAndSize(ps->buffer.chars, received * 2 * ps->channels);
+  return PyBytes_FromStringAndSize(buf.data(), received * sizeof( soundtouch::SAMPLETYPE ) * ps->channels);
 }
 
 // Return how many samples are available for output
@@ -243,6 +208,21 @@ static PyObject* py_soundtouch_ready_count(PyObject* self, PyObject* args) {
 // Return how many samples will be available given the current data
 static PyObject* py_soundtouch_waiting_count(PyObject* self, PyObject* args) {
   return PyLong_FromLong(PY_SOUNDTOUCH(self)->soundtouch->numUnprocessedSamples());
+}
+
+static PyObject* py_soundtouch_set_sample_rate(PyObject* self, PyObject* args) {
+  int rate;
+
+  // Given the rate as a fraction
+  if (!PyArg_ParseTuple(args, "i", &rate) || rate < 0) {
+    PyErr_SetString(PyExc_TypeError, "invalid argument");
+	return NULL;
+  }
+
+  PY_SOUNDTOUCH(self)->soundtouch->setSampleRate(rate);
+
+  Py_INCREF(Py_None);
+  return Py_None;
 }
 
 /* housekeeping */
@@ -258,7 +238,49 @@ static PyMethodDef soundtouch_methods[] = {
     { "get_samples", py_soundtouch_get_samples, METH_VARARGS, "" },
     { "ready_count", py_soundtouch_ready_count, METH_VARARGS, "" },
     { "waiting_count", py_soundtouch_waiting_count, METH_VARARGS, "" },
-    { NULL, 0, 0, NULL }
+    { "set_sample_rate", py_soundtouch_set_sample_rate, METH_VARARGS, "" },
+    { NULL }
+};
+
+PyTypeObject py_soundtouch_t = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "Soundtouch",                   /* tp_name */
+    sizeof(py_soundtouch),          /* tp_basicsize */
+    0,                              /* tp_itemsize */
+    (destructor) py_soundtouch_dealloc,      /* tp_dealloc */
+    0,                              /* tp_vectorcall_offset */
+    (getattrfunc) py_soundtouch_getattr,     /* tp_getattr */
+    0,                              /* tp_setattr */
+    0,                              /* tp_as_async */
+    0,                              /* tp_repr */
+    0,                              /* tp_as_number */
+    0,                              /* tp_as_sequence */
+    0,                              /* tp_as_mapping */
+    0,                              /* tp_hash */
+    0,                              /* tp_call */
+    0,                              /* tp_str */
+    0,                              /* tp_getattro */
+    0,                              /* tp_setattro */
+    0,                              /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT,             /* tp_flags */
+    "Soundtouch",                   /* tp_doc */
+    0,                              /* tp_traverse */
+    0,                              /* tp_clear */
+    0,                              /* tp_richcompare */
+    0,                              /* tp_weaklistoffset */
+    0,                              /* tp_iter */
+    0,                              /* tp_iternext */
+    soundtouch_methods,             /* tp_methods */
+    0,                              /* tp_members */
+    0,                              /* tp_getset */
+    0,                              /* tp_base */
+    0,                              /* tp_dict */
+    0,                              /* tp_descr_get */
+    0,                              /* tp_descr_set */
+    0,                              /* tp_dictoffset */
+    (initproc)py_soundtouch_new,    /* tp_init */
+    0,                              /* tp_alloc */
+    PyType_GenericNew,              /* tp_new */
 };
 
 // Get additional attributes from the SoundTouch object

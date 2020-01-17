@@ -12,7 +12,7 @@
 extern "C" {
   PyObject* py_soundtouch_new(PyObject* self, PyObject* args);
   PyObject* py_bpmdetect_new(PyObject* self, PyObject* args);
-  PyObject *PyInit_soundtouchmodule(void);
+  PyObject *PyInit_soundtouch(void);
 }
 
 #endif

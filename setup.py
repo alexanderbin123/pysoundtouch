@@ -3,6 +3,8 @@
 """Setup script for the SoundTouch module distribution."""
 
 import os, re, sys, string
+from pathlib import Path
+import itertools
 
 from distutils.core import setup
 from distutils.extension import Extension
@@ -43,9 +45,11 @@ defines = [('VERSION_MAJOR', VERSION_MAJOR),
            ('VERSION_MINOR', VERSION_MINOR),
            ('VERSION', '"%s"' % pysoundtouch_version)]
 
+src_dir = Path( "." ).absolute() / "src"
+
 soundtouchmodule = Extension(
-    name='soundtouchmodule',
-    sources=['src/soundtouchmodule.c', 'src/pysoundtouch.cpp', 'src/pybpmdetect.cpp', 'src/WavFile.cpp'],
+    name='soundtouch',
+    sources=list( map( lambda x: str( x ), itertools.chain( src_dir.glob( "*.cpp" ), src_dir.glob( "*.c" ) ) ) ),
     define_macros = defines,
     include_dirs=[data['soundtouch_include_dir']],
     library_dirs=[data['soundtouch_lib_dir']],
