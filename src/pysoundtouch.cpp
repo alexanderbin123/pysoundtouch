@@ -34,14 +34,14 @@ PyTypeObject py_soundtouch_t = {
 */
 
 // Constructor
-PyObject* py_soundtouch_new(PyObject* self, PyObject* args) {
+int py_soundtouch_init(PyObject* self, PyObject* args, PyObject *kwds) {
   py_soundtouch* ps = NULL;
   uint sampleRate, channels;
   
   // Needs to be given the sampling rate and number of channels
   if (!PyArg_ParseTuple(args, "II:Soundtouch", &sampleRate, &channels)) {
     PyErr_SetString(PyExc_RuntimeError, "Requires sampling rate and number of channels (sample size must be 2)");
-    return NULL;
+    return 0;
   }
 
   // Create the object
@@ -52,7 +52,7 @@ PyObject* py_soundtouch_new(PyObject* self, PyObject* args) {
   ps->soundtouch->setSampleRate(sampleRate);
   ps->soundtouch->setChannels(channels);
 
-  return (PyObject*) ps;
+  return 1;
 }
 
 // Deallocate the SoundTouch object
@@ -225,6 +225,21 @@ static PyObject* py_soundtouch_set_sample_rate(PyObject* self, PyObject* args) {
   return Py_None;
 }
 
+static PyObject* py_soundtouch_set_channels(PyObject* self, PyObject* args) {
+  unsigned int channels;
+
+  // Given the rate as a fraction
+  if (!PyArg_ParseTuple(args, "i", &channels) || channels < 0) {
+    PyErr_SetString(PyExc_TypeError, "invalid argument");
+	return NULL;
+  }
+
+  PY_SOUNDTOUCH(self)->soundtouch->setChannels(channels);
+
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
 /* housekeeping */
 
 static PyMethodDef soundtouch_methods[] = {
@@ -239,12 +254,13 @@ static PyMethodDef soundtouch_methods[] = {
     { "ready_count", py_soundtouch_ready_count, METH_VARARGS, "" },
     { "waiting_count", py_soundtouch_waiting_count, METH_VARARGS, "" },
     { "set_sample_rate", py_soundtouch_set_sample_rate, METH_VARARGS, "" },
+    { "set_channels", py_soundtouch_set_channels, METH_VARARGS, "" },
     { NULL }
 };
 
 PyTypeObject py_soundtouch_t = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "Soundtouch",                   /* tp_name */
+    "SoundTouch",                   /* tp_name */
     sizeof(py_soundtouch),          /* tp_basicsize */
     0,                              /* tp_itemsize */
     (destructor) py_soundtouch_dealloc,      /* tp_dealloc */
@@ -263,7 +279,7 @@ PyTypeObject py_soundtouch_t = {
     0,                              /* tp_setattro */
     0,                              /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT,             /* tp_flags */
-    "Soundtouch",                   /* tp_doc */
+    "SoundTouch",                   /* tp_doc */
     0,                              /* tp_traverse */
     0,                              /* tp_clear */
     0,                              /* tp_richcompare */
@@ -278,7 +294,7 @@ PyTypeObject py_soundtouch_t = {
     0,                              /* tp_descr_get */
     0,                              /* tp_descr_set */
     0,                              /* tp_dictoffset */
-    (initproc)py_soundtouch_new,    /* tp_init */
+    py_soundtouch_init,             /* tp_init */
     0,                              /* tp_alloc */
     PyType_GenericNew,              /* tp_new */
 };

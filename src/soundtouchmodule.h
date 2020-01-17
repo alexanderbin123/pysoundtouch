@@ -10,8 +10,8 @@
 
 /* module accessible functions */
 extern "C" {
-  PyObject* py_soundtouch_new(PyObject* self, PyObject* args);
-  PyObject* py_bpmdetect_new(PyObject* self, PyObject* args);
+  PyObject* py_soundtouch_new(PyObject* self, PyObject* args, PyObject *kwds);
+  PyObject* py_bpmdetect_new(PyObject* self, PyObject* args, PyObject *kwds);
   PyObject *PyInit_soundtouch(void);
 }
 

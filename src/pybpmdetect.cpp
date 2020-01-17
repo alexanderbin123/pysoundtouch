@@ -46,14 +46,14 @@ PyTypeObject py_bpmdetect_t = {
 */
 
 // Constructor
-PyObject* py_bpmdetect_new(PyObject* self, PyObject* args) {
+int py_bpmdetect_init(PyObject* self, PyObject* args, PyObject *kwds) {
   py_bpmdetect* ps = NULL;
   uint sampleRate, channels;
   
   // Needs to be constructed with sampling rate and number of channels
   if (!PyArg_ParseTuple(args, "II:Soundtouch", &sampleRate, &channels)) {
     PyErr_SetString(PyExc_RuntimeError, "Requires sampling rate and number of channels (sample size must be 2)");
-    return NULL;
+    return 0;
   }
 
   // Create the object
@@ -61,7 +61,7 @@ PyObject* py_bpmdetect_new(PyObject* self, PyObject* args) {
   ps->bpmdetect = new soundtouch::BPMDetect((int) channels, (int) sampleRate);
   ps->channels = (int) channels;
 
-  return (PyObject*) ps;
+  return 1;
 }
 
 // Deallocate the BPMDetect object
@@ -139,7 +139,7 @@ PyTypeObject py_bpmdetect_t = {
     0,                              /* tp_setattro */
     0,                              /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT,             /* tp_flags */
-    "Soundtouch",                   /* tp_doc */
+    "BPMDetect",                   /* tp_doc */
     0,                              /* tp_traverse */
     0,                              /* tp_clear */
     0,                              /* tp_richcompare */
@@ -154,7 +154,7 @@ PyTypeObject py_bpmdetect_t = {
     0,                              /* tp_descr_get */
     0,                              /* tp_descr_set */
     0,                              /* tp_dictoffset */
-    (initproc)py_bpmdetect_new,    /* tp_init */
+    py_bpmdetect_init,              /* tp_init */
     0,                              /* tp_alloc */
     PyType_GenericNew,              /* tp_new */
 };
